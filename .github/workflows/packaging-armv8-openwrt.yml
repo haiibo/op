@@ -64,6 +64,10 @@ on:
         default: true
         type: boolean
 
+env:
+  CONFIG_FILE: configs/armv8.config
+  TZ: Asia/Shanghai
+
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -76,7 +80,6 @@ jobs:
 
     env:
       RELEASE_TAG: ARMv8-${{ matrix.repo }}
-      TZ: Asia/Shanghai
 
     steps:
     - name: Checkout
@@ -125,6 +128,7 @@ jobs:
 
     - name: Generate Variables
       run: |
+        cp $CONFIG_FILE $OPENWRT_PATH/.config
         cd $OPENWRT_PATH
         make defconfig > /dev/null 2>&1
         SOURCE_REPO=$(echo $REPO_URL | awk -F '/' '{print $(NF)}')
