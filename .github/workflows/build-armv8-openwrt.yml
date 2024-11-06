@@ -43,9 +43,6 @@ jobs:
         elif [ ${{ matrix.repo }} == immortalwrt ]; then
           REPO_URL=https://github.com/immortalwrt/immortalwrt
           REPO_BRANCH=openwrt-23.05
-        else
-          echo "Unknown source code repository"
-          exit 1
         fi
         echo "REPO_URL=$REPO_URL" >> $GITHUB_ENV
         echo "REPO_BRANCH=$REPO_BRANCH" >> $GITHUB_ENV
