@@ -93,10 +93,12 @@ jobs:
         sudo lvcreate -n disk -l 100%FREE actions
         LV_NAME=$(sudo lvscan | awk -F "'" '{print $2}')
         sudo mkfs.btrfs -L combinedisk $LV_NAME
-        sudo mount -o compress=zstd $LV_NAME $GITHUB_WORKSPACE
-        sudo chown -R runner:runner $GITHUB_WORKSPACE && df -hT
+        sudo mkdir -p /workdir
+        sudo mount -o compress=zstd $LV_NAME /workdir
+        sudo chown -R runner:runner /workdir && df -hT
 
     - name: Clone Source Code
+      working-directory: /workdir
       run: |
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
