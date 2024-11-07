@@ -69,17 +69,17 @@ env:
   TZ: Asia/Shanghai
 
 jobs:
-  build:
+  packaging:
     runs-on: ubuntu-22.04
     if: github.event.repository.owner.id == github.event.sender.id || ! github.event.sender.id
-    name: build ${{ matrix.repo }}
+    name: packaging ${{ matrix.version }}
     strategy:
       fail-fast: false
       matrix:
-        repo: [lede, immortalwrt]
+        version: [18.06, 23.05]
 
     env:
-      RELEASE_TAG: ARMv8-${{ matrix.repo }}
+      RELEASE_TAG: ARMv8-${{ matrix.version }}
 
     steps:
     - name: Checkout
@@ -87,14 +87,14 @@ jobs:
 
     - name: Set Compile Source Code
       run: |
-        if [ ${{ matrix.repo }} == lede ]; then
+        if [ ${{ matrix.version }} == 18.06 ]; then
           REPO_URL=https://github.com/coolsnowwolf/lede
           REPO_BRANCH=master
-          echo -e "CONFIG_TARGET_armvirt=y\nCONFIG_TARGET_armvirt_64=y" >> $CONFIG_FILE
-        elif [ ${{ matrix.repo }} == immortalwrt ]; then
+          echo -e "CONFIG_TARGET_armvirt=y\nCONFIG_TARGET_armvirt_64=y" > $CONFIG_FILE
+        elif [ ${{ matrix.version }} == 23.05 ]; then
           REPO_URL=https://github.com/immortalwrt/immortalwrt
           REPO_BRANCH=openwrt-23.05
-          echo -e "CONFIG_TARGET_armsr=y\nCONFIG_TARGET_armsr_armv8=y" >> $CONFIG_FILE
+          echo -e "CONFIG_TARGET_armsr=y\nCONFIG_TARGET_armsr_armv8=y" > $CONFIG_FILE
         fi
         echo "REPO_URL=$REPO_URL" >> $GITHUB_ENV
         echo "REPO_BRANCH=$REPO_BRANCH" >> $GITHUB_ENV
@@ -137,6 +137,9 @@ jobs:
         echo "DEVICE_TARGET=$DEVICE_TARGET" >> $GITHUB_ENV
         DEVICE_SUBTARGET=$(cat .config | grep CONFIG_TARGET_SUBTARGET | awk -F '"' '{print $2}')
         echo "DEVICE_SUBTARGET=$DEVICE_SUBTARGET" >> $GITHUB_ENV
+        KERNEL=$(grep -oP 'KERNEL_PATCHVER:=\K[^ ]+' target/linux/$DEVICE_TARGET/Makefile)
+        KERNEL_VERSION=$(sed -n 2p include/kernel-$KERNEL | awk -F '-' '{print $2}' | awk -F ' ' '{print $1}')
+        echo "KERNEL_VERSION=$KERNEL_VERSION" >> $GITHUB_ENV
 
     - name: Download OpenWrt Firmware
       id: download
@@ -181,7 +184,7 @@ jobs:
       run: |
         cd $PACKAGED_OUTPUTPATH
         rm -f *rootfs.tar.gz *.sha
-        if [ ${{ matrix.repo }} == immortalwrt ]; then
+        if [ ${{ matrix.version }} == 23.05 ]; then
           rename 's/openwrt/${{ env.SOURCE_REPO }}/' *
         fi
 
@@ -204,10 +207,10 @@ jobs:
         body: |
           **This is OpenWrt Firmware for Armvirt 64**
           ### 📒 固件信息
-          - 🚀 ARMv8 精简版，主打科学上网适合养老
           - 💻 平台架构: ${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}
           - ⚽ 固件源码: ${{ env.REPO_URL }}
           - 💝 源码分支: ${{ env.REPO_BRANCH }}
+          - 🚀 内核版本: ${{ env.KERNEL_VERSION }}
           - 🌐 默认地址: 192.168.1.2
           - 🔑 默认密码: password
           ### 🧊 固件版本
