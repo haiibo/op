@@ -16,7 +16,7 @@ on:
         default: "s905d_s905x3"
 
       customize_rk3399:
-        description: "设置 rk3399 设备型号(设备型号:dtb名称)"
+        description: "设置 rk3399 设备(设备型号:dtb名称)"
         required: false
         default: ""
 
@@ -69,7 +69,7 @@ env:
   TZ: Asia/Shanghai
 
 jobs:
-  packaging:
+  package:
     runs-on: ubuntu-22.04
     if: github.event.repository.owner.id == github.event.sender.id || ! github.event.sender.id
     name: packaging ${{ matrix.version }}
@@ -198,14 +198,14 @@ jobs:
       if: env.PACKAGED_STATUS == 'success' && github.event.inputs.upload_release == 'true'
       uses: ncipollo/release-action@main
       with:
-        name: ${{ env.DATE }} for ${{ env.RELEASE_TAG }}
+        name: ${{ env.DATE }} for ${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}
         allowUpdates: true
         removeArtifacts: true
         tag: ${{ env.RELEASE_TAG }}
         token: ${{ secrets.GITHUB_TOKEN }}
         artifacts: ${{ env.FIRMWARE_PATH }}/*,${{ env.PACKAGED_OUTPUTPATH }}/*
         body: |
-          **This is OpenWrt Firmware for Armvirt 64**
+          **This is OpenWrt Firmware for ${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}**
           ### 📒 固件信息
           - 💻 平台架构: ${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}
           - ⚽ 固件源码: ${{ env.REPO_URL }}
